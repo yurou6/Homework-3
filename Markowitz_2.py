@@ -74,7 +74,14 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
+        short_window = 5
+        long_window = 20
+        short_ema = self.price.ewm(span=short_window, adjust=False).mean()
+        long_ema = self.price.ewm(span=long_window, adjust=False).mean()
 
+        signals = pd.DataFrame(index=self.price.index, columns=self.price.columns)
+        signals[assets] = short_ema[assets] > long_ema[assets]
+        self.portfolio_weights[assets] = signals[assets] / len(assets)
         """
         TODO: Complete Task 4 Above
         """

@@ -66,7 +66,10 @@ class EqualWeightPortfolio:
         """
         TODO: Complete Task 1 Below
         """
-
+        num_assets = len(assets)
+        equal_weight = 1 / num_assets
+        for asset in assets:
+            self.portfolio_weights[asset] = equal_weight
         """
         TODO: Complete Task 1 Above
         """
@@ -117,7 +120,14 @@ class RiskParityPortfolio:
         """
         TODO: Complete Task 2 Below
         """
-
+        # Calculate inverse volatilities
+        df_r = df.pct_change().dropna()
+        asset_volatilities = df_r[assets].shift(1).rolling(window=self.lookback).std()
+        inverse_volatilities = 1 / asset_volatilities
+        # Normalize inverse volatilities
+        normalized_inverse_volatilities = inverse_volatilities.div(inverse_volatilities.sum(axis=1), axis=0)
+        # Assign weights
+        self.portfolio_weights[assets] = normalized_inverse_volatilities
         """
         TODO: Complete Task 2 Above
         """
@@ -189,12 +199,20 @@ class MeanVariancePortfolio:
                 """
                 TODO: Complete Task 3 Below
                 """
-
+                
                 # Sample Code: Initialize Decision w and the Objective
                 # NOTE: You can modify the following code
-                w = model.addMVar(n, name="w", ub=1)
-                model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
-
+                # w = model.addMVar(n, name="w", ub=1)
+                # model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
+                
+                # Add decision variables for portfolio weights
+                w = model.addMVar(n, name="w", lb=0, ub=1)
+                # Set objective function: maximize w^T * mu - gamma/2 * w^T * Sigma * w
+                obj = w @ mu - gamma/2 * w @ Sigma @ w
+                model.setObjective(obj, gp.GRB.MAXIMIZE)
+                # Add constraint: sum of weights equals 1
+                model.addConstr(w.sum() == 1, name="sum_weights")
+                
                 """
                 TODO: Complete Task 3 Below
                 """
